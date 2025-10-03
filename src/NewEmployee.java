@@ -125,40 +125,153 @@ public class NewEmployee extends JFrame implements ActionListener {
 
     }
 
-    // Override the actionPerformed method of the ActionListener interface
+    /**
+     * Handle button click events
+     */
     public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == submitButton) {
+            addNewEmployee();
+        } else if (ae.getSource() == cancelButton) {
+            this.dispose();
+        }
+    }
 
-        // Create a new instance of the Random class to generate a unique employee
-        // number
-        Random rnd = new Random();
-        int number = rnd.nextInt(9999);
-        String num = "" + number;
+    /**
+     * Add new employee to database with validation and security
+     */
+    private void addNewEmployee() {
+        // Get and validate input values
+        String name = nameCols.getText().trim();
+        String gender = choice.getSelectedItem();
+        String address = addressCols.getText().trim();
+        String state = stateCols.getText().trim();
+        String city = cityCols.getText().trim();
+        String email = emailCols.getText().trim();
+        String phone = phoneCols.getText().trim();
 
-        // get the values entered in the text fields and choice box
-        String n = nameCols.getText();
-        String g = choice.getSelectedItem();
-        String a = addressCols.getText();
-        String s = stateCols.getText();
-        String c = cityCols.getText();
-        String e = emailCols.getText();
-        String p = phoneCols.getText();
-        // construct a SQL query to insert a new employee with the entered values
-        String qry = "insert into employee values('" + num + "','" + n + "','" + g + "','" + a + "','" + s + "','" + c
-                + "','" + e + "','" + p + "')";
+        // Validate required fields
+        if (name.isEmpty()) {
+            showValidationError("Name is required!");
+            nameCols.requestFocus();
+            return;
+        }
+
+        if (phone.isEmpty()) {
+            showValidationError("Phone number is required!");
+            phoneCols.requestFocus();
+            return;
+        }
+
+        // Validate email format if provided
+        if (!email.isEmpty() && !isValidEmail(email)) {
+            showValidationError("Please enter a valid email address!");
+            emailCols.requestFocus();
+            return;
+        }
+
+        // Validate phone number format
+        if (!isValidPhone(phone)) {
+            showValidationError("Please enter a valid phone number (digits and dashes only)!");
+            phoneCols.requestFocus();
+            return;
+        }
+
+        // Generate unique employee ID
+        String empId = generateEmployeeId();
+
+        Conn conn = null;
+        PreparedStatement pstmt = null;
 
         try {
-            // create a new connection object
-            Conn c1 = new Conn();
-            // execute the SQL query to insert the new employee into the database
-            c1.s.executeUpdate(qry);
-            // display a success message to the user
-            JOptionPane.showMessageDialog(null, "Employee Created");
-            this.setVisible(false); // hide the current window
+            conn = new Conn();
 
-        } catch (Exception ee) {
-            // if an exception occurs, print the stack trace
-            ee.printStackTrace();
+            // Use PreparedStatement for secure database insertion
+            String query = "INSERT INTO employee (emp_id, name, gender, address, state, city, email, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            pstmt = conn.prepareStatement(query);
+
+            pstmt.setString(1, empId);
+            pstmt.setString(2, name);
+            pstmt.setString(3, gender);
+            pstmt.setString(4, address);
+            pstmt.setString(5, state);
+            pstmt.setString(6, city);
+            pstmt.setString(7, email.isEmpty() ? null : email);
+            pstmt.setString(8, phone);
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Employee created successfully!\nEmployee ID: " + empId,
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                // Clear form fields
+                clearForm();
+                this.dispose();
+            } else {
+                showValidationError("Failed to create employee. Please try again.");
+            }
+
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 1062) { // Duplicate entry error
+                showValidationError("Employee with this ID already exists. Please try again.");
+            } else {
+                showValidationError("Database error: " + e.getMessage());
+            }
+            System.err.println("Error creating employee: " + e.getMessage());
+        } finally {
+            // Clean up resources
+            try {
+                if (pstmt != null)
+                    pstmt.close();
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing database resources: " + e.getMessage());
+            }
         }
+    }
+
+    /**
+     * Generate unique employee ID
+     */
+    private String generateEmployeeId() {
+        return "EMP" + String.format("%04d", new Random().nextInt(9999) + 1);
+    }
+
+    /**
+     * Validate email format
+     */
+    private boolean isValidEmail(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$");
+    }
+
+    /**
+     * Validate phone number format
+     */
+    private boolean isValidPhone(String phone) {
+        return phone.matches("^[0-9-+()\\s]+$") && phone.replaceAll("[^0-9]", "").length() >= 10;
+    }
+
+    /**
+     * Show validation error message
+     */
+    private void showValidationError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Clear all form fields
+     */
+    private void clearForm() {
+        nameCols.setText("");
+        addressCols.setText("");
+        stateCols.setText("");
+        cityCols.setText("");
+        emailCols.setText("");
+        phoneCols.setText("");
+        choice.select(0);
     }
 
     // main method to create and display a new instance of the NewEmployee class

@@ -3,7 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.*;
-
+import java.util.Calendar;
 
 public class PaySlip extends JFrame implements ActionListener {
 
@@ -61,7 +61,7 @@ public class PaySlip extends JFrame implements ActionListener {
             double net = 0;
 
             java.util.Date d1 = new java.util.Date();
-            Calendar cal = new Calendar.getInstance();
+            Calendar cal = Calendar.getInstance();
             int month = cal.get(Calendar.MONTH);
 
             textArea.setText(

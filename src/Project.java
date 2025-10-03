@@ -5,7 +5,16 @@ import java.awt.event.*;
 public class Project extends JFrame implements ActionListener {
 
     Project() {
-        setSize(2000, 1100);
+        // Set window title with user information
+        String title = Config.getInstance().getAppName();
+        if (UserSession.isLoggedIn()) {
+            title += " - " + UserSession.getDisplayName();
+        }
+        setTitle(title);
+
+        setSize(1400, 800);
+        setLocationRelativeTo(null); // Center on screen
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         getContentPane().setBackground(Color.WHITE);
 
         ImageIcon imageIcon1 = new ImageIcon(ClassLoader.getSystemResource("icon/payroll.jpg"));
@@ -149,9 +158,19 @@ public class Project extends JFrame implements ActionListener {
         u2.addActionListener(this);
         u3.addActionListener(this);
 
-        JMenu m8 = new JMenu("Exit");
+        JMenu m8 = new JMenu("System");
         m8.setForeground(Color.red);
         menuBar.add(m8);
+
+        JMenuItem logout = new JMenuItem("Logout");
+        logout.setForeground(Color.blue);
+        logout.setFont(new Font("monospaced", Font.PLAIN, 14));
+        logout.setMnemonic('L');
+        logout.setIcon(new ImageIcon(ClassLoader.getSystemResource("icon/exit.PNG")));
+        logout.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.CTRL_MASK));
+        logout.addActionListener(this);
+        m8.add(logout);
+
         JMenuItem m8i1 = new JMenuItem("Exit");
         m8.add(m8i1);
         m8i1.setForeground((Color.blue));
@@ -177,28 +196,138 @@ public class Project extends JFrame implements ActionListener {
         else if (msg.equals("Update Salary"))
             new UpdateSalary().setVisible(true);
         else if (msg.equals("Notepad")) {
-            try {
-                Runtime.getRuntime().exec("notepad.exe");
-            } catch (Exception e) {
-            }
+            openNotepad();
         } else if (msg.equals("Calculator")) {
-            try {
-                Runtime.getRuntime().exec("calc.exe");
-            } catch (Exception e) {
-            }
+            openCalculator();
         } else if (msg.equals("Web Browser")) {
-            try {
-                Runtime.getRuntime().exec("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe");
-            } catch (Exception e) {
-            }
+            openWebBrowser();
         } else if (msg.equals("Take Attendance")) {
             new TakeAttendance().setVisible(true);
-        } else if (msg.equals("Exit"))
-            System.exit(0);
-        else if (msg.equals("Generate PaySlip"))
+        } else if (msg.equals("Logout")) {
+            handleLogout();
+        } else if (msg.equals("Exit")) {
+            handleExit();
+        } else if (msg.equals("Generate PaySlip")) {
             new PaySlip().setVisible(true);
-        else if (msg.equals("List Attendance"))
+        } else if (msg.equals("List Attendance")) {
             new ListAttendance().setVisible(true);
+        }
+    }
+
+    /**
+     * Open notepad/text editor based on operating system
+     */
+    private void openNotepad() {
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                Runtime.getRuntime().exec("notepad.exe");
+            } else if (os.contains("mac")) {
+                Runtime.getRuntime().exec("open -a TextEdit");
+            } else {
+                // Linux/Unix
+                Runtime.getRuntime().exec("gedit");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Could not open text editor: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Open calculator application based on operating system
+     */
+    private void openCalculator() {
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                Runtime.getRuntime().exec("calc.exe");
+            } else if (os.contains("mac")) {
+                Runtime.getRuntime().exec("open -a Calculator");
+            } else {
+                // Linux/Unix - try multiple options
+                try {
+                    Runtime.getRuntime().exec("gnome-calculator");
+                } catch (Exception e1) {
+                    Runtime.getRuntime().exec("kcalc");
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Could not open calculator: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Open web browser based on operating system
+     */
+    private void openWebBrowser() {
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                // Try Edge first, then fallback to default browser
+                try {
+                    Runtime.getRuntime().exec("msedge");
+                } catch (Exception e1) {
+                    Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler http://www.google.com");
+                }
+            } else if (os.contains("mac")) {
+                Runtime.getRuntime().exec("open http://www.google.com");
+            } else {
+                // Linux/Unix - try multiple browsers
+                try {
+                    Runtime.getRuntime().exec("firefox");
+                } catch (Exception e1) {
+                    try {
+                        Runtime.getRuntime().exec("google-chrome");
+                    } catch (Exception e2) {
+                        Runtime.getRuntime().exec("xdg-open http://www.google.com");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Could not open web browser: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Handle user logout
+     */
+    private void handleLogout() {
+        int option = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to logout?",
+                "Logout Confirmation",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (option == JOptionPane.YES_OPTION) {
+            UserSession.logout();
+            this.dispose();
+            new Login().setVisible(true);
+        }
+    }
+
+    /**
+     * Handle application exit
+     */
+    private void handleExit() {
+        int option = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to exit the application?",
+                "Exit Confirmation",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (option == JOptionPane.YES_OPTION) {
+            UserSession.logout();
+            System.exit(0);
+        }
     }
 
     public static void main(String[] args) {

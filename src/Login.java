@@ -48,24 +48,93 @@ public class Login extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent ae) {
-        try {
-            Conn c1 = new Conn();
-            String u = textField.getText();
-            String v = passField.getPassword();
-
-            String q = "select * from login where username='" + u + "' and password='" + v + "'";
-
-            ResultSet rs = c1.s.executeQuery(q); // query execute
-            if (rs.next()) {
-                new Project().setVisible(true);
-                setVisible(false);
-            } else {
-                JOptionPane.showMessageDialog(null, "Invalid login");
-                setVisible(false);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (ae.getSource() == button1) { // Submit button
+            authenticateUser();
+        } else if (ae.getSource() == button2) { // Cancel button
+            System.exit(0);
         }
+    }
+
+    /**
+     * Authenticate user with secure database query
+     */
+    private void authenticateUser() {
+        String username = textField.getText().trim();
+        char[] passwordChars = passField.getPassword();
+        String password = new String(passwordChars);
+
+        // Clear password from memory for security
+        java.util.Arrays.fill(passwordChars, ' ');
+
+        // Input validation
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Please enter both username and password.",
+                    "Login Error",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Conn conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = new Conn();
+
+            // Use PreparedStatement to prevent SQL injection
+            String query = "SELECT username, role FROM login WHERE username = ? AND password = ?";
+            pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String role = rs.getString("role");
+                JOptionPane.showMessageDialog(this,
+                        "Welcome, " + username + " (" + role + ")!",
+                        "Login Successful",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                // Store current user info for session management
+                UserSession.setCurrentUser(username, role);
+
+                new Project().setVisible(true);
+                this.dispose(); // Use dispose() instead of setVisible(false)
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Invalid username or password.\nPlease try again.",
+                        "Login Failed",
+                        JOptionPane.ERROR_MESSAGE);
+
+                // Clear fields on failed login
+                textField.setText("");
+                passField.setText("");
+                textField.requestFocus();
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Database error: " + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+            System.err.println("Login authentication error: " + e.getMessage());
+        } finally {
+            // Ensure resources are properly closed
+            try {
+                if (rs != null)
+                    rs.close();
+                if (pstmt != null)
+                    pstmt.close();
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing database resources: " + e.getMessage());
+            }
+        }
+
+        // Clear password from memory
+        password = null;
     }
 
     public static void main(String[] args) {
