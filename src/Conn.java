@@ -20,18 +20,22 @@ public class Conn {
      */
     private void connect() {
         try {
-            // Load the modern MySQL driver
+            // Load the database driver
             Class.forName(config.getDatabaseDriver());
 
-            // Create connection with proper URL parameters
-            String url = config.getDatabaseUrl() + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            connection = DriverManager.getConnection(
-                    url,
-                    config.getDatabaseUsername(),
-                    config.getDatabasePassword());
+            // Create connection - SQLite doesn't require username/password if blank
+            String url = config.getDatabaseUrl();
+            String username = config.getDatabaseUsername();
+            String password = config.getDatabasePassword();
+            
+            if (username == null || username.trim().isEmpty()) {
+                connection = DriverManager.getConnection(url);
+            } else {
+                connection = DriverManager.getConnection(url, username, password);
+            }
 
             statement = connection.createStatement();
-
+            
             // Update deprecated properties for backward compatibility
             updateDeprecatedProperties();
 

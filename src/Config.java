@@ -54,10 +54,10 @@ public class Config {
      * Set default properties if configuration file is not available
      */
     private void setDefaultProperties() {
-        properties.setProperty("db.url", "jdbc:mysql://localhost:3306/payroll_system");
-        properties.setProperty("db.username", "root");
-        properties.setProperty("db.password", "mysql123");
-        properties.setProperty("db.driver", "com.mysql.cj.jdbc.Driver");
+        properties.setProperty("db.url", "jdbc:h2:./data/payrolldb;AUTO_SERVER=TRUE");
+        properties.setProperty("db.username", "sa");
+        properties.setProperty("db.password", "");
+        properties.setProperty("db.driver", "org.h2.Driver");
         properties.setProperty("app.name", "Payroll Management System");
         properties.setProperty("app.version", "3.1");
     }

@@ -21,9 +21,10 @@ public class Salary extends JFrame implements ActionListener {
             ResultSet rs = connection.s.executeQuery("select * from employee");
 
             while (rs.next()) {
-                choice.add(rs.getString("id"));
+                choice.add(rs.getString("emp_id"));
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         add(new JLabel("Select Empno"));
@@ -77,22 +78,57 @@ public class Salary extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent ae) {
-
-        String hra = textField1.getText();
-        String id = choice.getSelectedItem();
-        String da = textField3.getText();
-        String med = textField4.getText();
-        String pf = textField5.getText();
-        String basic = textField6.getText();
-        String qry = "insert into salary values(" + id + "," + hra + "," + da + "," + med + "," + pf + "," + basic
-                + ")";
+        // Input validation
+        if (textField1.getText().trim().isEmpty() || textField3.getText().trim().isEmpty() ||
+            textField4.getText().trim().isEmpty() || textField5.getText().trim().isEmpty() ||
+            textField6.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all salary fields.", 
+                "Input Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         try {
+            String hra = textField1.getText().trim();
+            String empId = choice.getSelectedItem();
+            String da = textField3.getText().trim();
+            String med = textField4.getText().trim();
+            String pf = textField5.getText().trim();
+            String basic = textField6.getText().trim();
+
+            // Validate numeric inputs
+            Double.parseDouble(hra);
+            Double.parseDouble(da);
+            Double.parseDouble(med);
+            Double.parseDouble(pf);
+            Double.parseDouble(basic);
+
             Conn connection1 = new Conn();
-            connection1.s.executeUpdate(qry);
-            JOptionPane.showMessageDialog(null, "Salary updated");
-            this.setVisible(false);
+            String qry = "INSERT INTO salary (emp_id, basic_salary, hra, da, med, pf, advance) VALUES (?, ?, ?, ?, ?, ?, 0.00)";
+            PreparedStatement pstmt = connection1.prepareStatement(qry);
+            pstmt.setString(1, empId);
+            pstmt.setString(2, basic);
+            pstmt.setString(3, hra);
+            pstmt.setString(4, da);
+            pstmt.setString(5, med);
+            pstmt.setString(6, pf);
+            
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Salary updated successfully!");
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(null, "Failed to update salary.", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            
+            pstmt.close();
+            connection1.close();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Please enter valid numeric values for salary components.", 
+                "Input Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ee) {
+            JOptionPane.showMessageDialog(this, "Database error: " + ee.getMessage(), 
+                "Database Error", JOptionPane.ERROR_MESSAGE);
             ee.printStackTrace();
         }
     }

@@ -24,9 +24,10 @@ public class UpdateEmployee extends JFrame implements ActionListener, ItemListen
             ResultSet rs = connection.s.executeQuery("select * from employee");
 
             while (rs.next()) {
-                choice2.add(rs.getString("id"));
+                choice2.add(rs.getString("emp_id"));
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         employeeNum = new JLabel("Select Empno");
@@ -120,33 +121,78 @@ public class UpdateEmployee extends JFrame implements ActionListener, ItemListen
     public void actionPerformed(ActionEvent ae) {
 
         if (ae.getSource() == button1) {
-            String n = textField1.getText();
+            // Input validation
+            if (textField1.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter employee name.", 
+                    "Input Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            String n = textField1.getText().trim();
             String g = choice1.getSelectedItem();
-            String a = textField3.getText();
-            String s = textField4.getText();
-            String c = textField5.getText();
-            String e = textField6.getText();
-            String p = textField7.getText();
-            String qry = "update employee set name='" + n + "',gender='" + g + "',address='" + a + "',state='" + s
-                    + "',city='" + c + "',email='" + e + "',phone='" + p + "'   where id=" + choice2.getSelectedItem();
+            String a = textField3.getText().trim();
+            String s = textField4.getText().trim();
+            String c = textField5.getText().trim();
+            String e = textField6.getText().trim();
+            String p = textField7.getText().trim();
+            String empId = choice2.getSelectedItem();
 
             try {
                 Conn connection = new Conn();
-                connection.s.executeUpdate(qry);
-                JOptionPane.showMessageDialog(null, "Employee Updated");
+                String qry = "UPDATE employee SET name=?, gender=?, address=?, state=?, city=?, email=?, phone=? WHERE emp_id=?";
+                PreparedStatement pstmt = connection.prepareStatement(qry);
+                pstmt.setString(1, n);
+                pstmt.setString(2, g);
+                pstmt.setString(3, a);
+                pstmt.setString(4, s);
+                pstmt.setString(5, c);
+                pstmt.setString(6, e);
+                pstmt.setString(7, p);
+                pstmt.setString(8, empId);
+                
+                int rowsAffected = pstmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(null, "Employee Updated Successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(null, "No employee found with the selected ID.", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                pstmt.close();
+                connection.close();
             } catch (Exception ee) {
+                JOptionPane.showMessageDialog(this, "Database error: " + ee.getMessage(), 
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
                 ee.printStackTrace();
             }
         }
 
         if (ae.getSource() == button2) {
-            try {
-                Conn connection = new Conn();
-                connection.s.executeUpdate("delete from employee where id=" + choice2.getSelectedItem());
-                JOptionPane.showMessageDialog(null, "Employee Deleted");
-                this.setVisible(false);
-            } catch (Exception ee) {
-                ee.printStackTrace();
+            int option = JOptionPane.showConfirmDialog(this, 
+                "Are you sure you want to delete this employee?", 
+                "Confirm Delete", JOptionPane.YES_NO_OPTION);
+            
+            if (option == JOptionPane.YES_OPTION) {
+                try {
+                    Conn connection = new Conn();
+                    String qry = "DELETE FROM employee WHERE emp_id=?";
+                    PreparedStatement pstmt = connection.prepareStatement(qry);
+                    pstmt.setString(1, choice2.getSelectedItem());
+                    
+                    int rowsAffected = pstmt.executeUpdate();
+                    if (rowsAffected > 0) {
+                        JOptionPane.showMessageDialog(null, "Employee Deleted Successfully!");
+                        this.dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No employee found with the selected ID.", 
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    pstmt.close();
+                    connection.close();
+                } catch (Exception ee) {
+                    JOptionPane.showMessageDialog(this, "Database error: " + ee.getMessage(), 
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
+                    ee.printStackTrace();
+                }
             }
         }
     }
@@ -154,7 +200,10 @@ public class UpdateEmployee extends JFrame implements ActionListener, ItemListen
     public void itemStateChanged(ItemEvent ie) {
         try {
             Conn connection = new Conn();
-            ResultSet rs = connection.s.executeQuery("select * from employee where id=" + choice2.getSelectedItem());
+            String qry = "SELECT * FROM employee WHERE emp_id=?";
+            PreparedStatement pstmt = connection.prepareStatement(qry);
+            pstmt.setString(1, choice2.getSelectedItem());
+            ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
                 textField1.setText(rs.getString("name"));
@@ -164,6 +213,9 @@ public class UpdateEmployee extends JFrame implements ActionListener, ItemListen
                 textField6.setText(rs.getString("email"));
                 textField7.setText(rs.getString("phone"));
             }
+            rs.close();
+            pstmt.close();
+            connection.close();
         } catch (Exception ee) {
             ee.printStackTrace();
         }

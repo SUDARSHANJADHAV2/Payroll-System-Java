@@ -17,10 +17,11 @@ public class UpdateSalary extends JFrame implements ActionListener, ItemListener
             Conn connection = new Conn();
             ResultSet rs = connection.s.executeQuery("select * from salary");
             while (rs.next()) {
-                choice.add(rs.getString("id"));
+                choice.add(rs.getString("emp_id"));
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         JLabel emp = new JLabel("Select Empno");
@@ -97,35 +98,87 @@ public class UpdateSalary extends JFrame implements ActionListener, ItemListener
     public void actionPerformed(ActionEvent ae) {
 
         if (ae.getSource() == button1) {
-            String hra = t1.getText();
-            String id = choice.getSelectedItem();
-            String da = t2.getText();
-            String med = t3.getText();
-            String pf = t4.getText();
-            String basic = t5.getText();
-
-            String qry = "update salary set hra=" + hra + ",da=" + da + ",med=" + med + ",pf=" + pf + ",basic_salary="
-                    + basic + "  where id=" + choice.getSelectedItem();
+            // Input validation
+            if (t1.getText().trim().isEmpty() || t2.getText().trim().isEmpty() ||
+                t3.getText().trim().isEmpty() || t4.getText().trim().isEmpty() ||
+                t5.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill in all salary fields.", 
+                    "Input Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
             try {
+                String hra = t1.getText().trim();
+                String empId = choice.getSelectedItem();
+                String da = t2.getText().trim();
+                String med = t3.getText().trim();
+                String pf = t4.getText().trim();
+                String basic = t5.getText().trim();
+
+                // Validate numeric inputs
+                Double.parseDouble(hra);
+                Double.parseDouble(da);
+                Double.parseDouble(med);
+                Double.parseDouble(pf);
+                Double.parseDouble(basic);
+
                 Conn c1 = new Conn();
-                c1.s.executeUpdate(qry);
-                JOptionPane.showMessageDialog(null, "Salary Updated");
-                this.setVisible(false);
+                String qry = "UPDATE salary SET hra=?, da=?, med=?, pf=?, basic_salary=? WHERE emp_id=?";
+                PreparedStatement pstmt = c1.prepareStatement(qry);
+                pstmt.setString(1, hra);
+                pstmt.setString(2, da);
+                pstmt.setString(3, med);
+                pstmt.setString(4, pf);
+                pstmt.setString(5, basic);
+                pstmt.setString(6, empId);
+                
+                int rowsAffected = pstmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(null, "Salary Updated Successfully!");
+                    this.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(null, "No salary record found for the selected employee.", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                pstmt.close();
+                c1.close();
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Please enter valid numeric values for salary components.", 
+                    "Input Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ee) {
+                JOptionPane.showMessageDialog(this, "Database error: " + ee.getMessage(), 
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
                 ee.printStackTrace();
             }
         }
 
         if (ae.getSource() == button2) {
-
-            try {
-                Conn connection = new Conn();
-                connection.s.executeUpdate("delete from salary where id=" + choice.getSelectedItem());
-                JOptionPane.showMessageDialog(null, "Salary Deleted");
-                this.setVisible(false);
-            } catch (Exception ee) {
-                ee.printStackTrace();
+            int option = JOptionPane.showConfirmDialog(this, 
+                "Are you sure you want to delete this salary record?", 
+                "Confirm Delete", JOptionPane.YES_NO_OPTION);
+            
+            if (option == JOptionPane.YES_OPTION) {
+                try {
+                    Conn connection = new Conn();
+                    String qry = "DELETE FROM salary WHERE emp_id=?";
+                    PreparedStatement pstmt = connection.prepareStatement(qry);
+                    pstmt.setString(1, choice.getSelectedItem());
+                    
+                    int rowsAffected = pstmt.executeUpdate();
+                    if (rowsAffected > 0) {
+                        JOptionPane.showMessageDialog(null, "Salary Deleted Successfully!");
+                        this.dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No salary record found for the selected employee.", 
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    pstmt.close();
+                    connection.close();
+                } catch (Exception ee) {
+                    JOptionPane.showMessageDialog(this, "Database error: " + ee.getMessage(), 
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
+                    ee.printStackTrace();
+                }
             }
         }
     }
@@ -133,15 +186,21 @@ public class UpdateSalary extends JFrame implements ActionListener, ItemListener
     public void itemStateChanged(ItemEvent ie) {
         try {
             Conn connection = new Conn();
-            ResultSet rs = connection.s.executeQuery("select * from salary where id=" + choice.getSelectedItem());
+            String qry = "SELECT * FROM salary WHERE emp_id=?";
+            PreparedStatement pstmt = connection.prepareStatement(qry);
+            pstmt.setString(1, choice.getSelectedItem());
+            ResultSet rs = pstmt.executeQuery();
+            
             if (rs.next()) {
                 t1.setText(rs.getString("hra"));
                 t2.setText(rs.getString("da"));
                 t3.setText(rs.getString("med"));
                 t4.setText(rs.getString("pf"));
                 t5.setText(rs.getString("basic_salary"));
-
             }
+            rs.close();
+            pstmt.close();
+            connection.close();
         } catch (Exception ee) {
             ee.printStackTrace();
         }

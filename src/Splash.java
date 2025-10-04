@@ -1,5 +1,4 @@
 import java.awt.*;
-import javax.security.auth.login.LoginContext;
 import javax.swing.*;
 
 class Splash {
