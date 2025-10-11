@@ -1,67 +1,70 @@
 # Payroll Management System
 
-A modernized **Java Swing Desktop Application** for Employee Payroll Management, built with Maven and featuring a MySQL database integration. This system provides a complete solution for managing employee records, attendance, salaries, and payslips, with an improved user interface and a new dark mode theme.
+This is a comprehensive desktop application for managing employee payroll, built using Java Swing. It provides a user-friendly interface for managing employees, salaries, attendance, and generating payslips.
 
-![Java](https://img.shields.io/badge/Java-8%2B-orange)
-![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-blue)
-![Maven](https://img.shields.io/badge/Build-Maven--red)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+## Features
 
-## 🚀 Features
+*   **Employee Management:** Add, update, and view employee details.
+*   **Salary Management:** Manage salary components for each employee.
+*   **Attendance Tracking:** Record daily attendance for employees.
+*   **Payslip Generation:** Generate monthly payslips for all employees.
+*   **Secure Login:** Role-based access control with hashed password storage.
+*   **Theme Switching:** Toggle between light and dark themes.
 
-- **Modern GUI:** A clean and intuitive user interface with a new dark mode theme.
-- **Maven Build:** A fully automated build process using Maven for easy dependency management.
-- **Connection Pooling:** High-performance database connection pooling with HikariCP.
-- **Secure Authentication:** Role-based login with SQL injection protection.
-- **Employee Management:** Add, update, delete, and view employee records.
-- **Salary Management:** Calculate salaries with HRA, DA, Medical, and PF components.
-- **Attendance Tracking:** Mark and view employee attendance records.
-- **Payslip Generation:** Generate detailed payslips for employees.
-- **Cross-Platform Utilities:** Launch Notepad, Calculator, and a web browser from within the application.
+## Technologies Used
 
-## 📋 Prerequisites
+*   **Java Swing:** For the graphical user interface.
+*   **H2 Database:** An embedded, in-memory database for data storage.
+*   **Maven:** For project build and dependency management.
+*   **HikariCP:** For high-performance JDBC connection pooling.
+*   **jBCrypt:** For hashing and securing user passwords.
 
-- **Java Development Kit (JDK) 8 or higher**
-- **Apache Maven 3.6 or higher**
-- **MySQL Server 5.7 or higher**
+## Getting Started
 
-## 🛠️ Installation & Setup
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/payroll-system.git
-    cd payroll-system
-    ```
+### Prerequisites
 
-2.  **Configure the database:**
-    -   Open `src/main/resources/config/database.properties` and update the database URL, username, and password.
-    -   Create the database in MySQL:
-        ```sql
-        CREATE DATABASE payroll_system;
-        ```
+*   Java Development Kit (JDK) 8 or higher
+*   Apache Maven
 
-3.  **Build and run the application:**
-    ```bash
-    mvn clean install
-    java -jar target/payroll-system-3.1.0.jar
-    ```
+### Cloning the Repository
 
-## 🎯 Usage Guide
+First, clone the repository to your local machine:
 
--   **Login:** Use the default credentials `admin` / `admin123` to log in.
--   **Toggle Theme:** Go to `System -> Toggle Theme` to switch between light and dark mode.
--   **Employee Management:** Use the `Master` menu to manage employees and salaries.
--   **Update Records:** Use the `Update` menu to update employee and salary information.
--   **Generate Reports:** Use the `Reports` menu to generate payslips and view attendance records.
+```bash
+git clone https://github.com/your-username/payroll-system.git
+cd payroll-system
+```
 
-## 📊 Database Schema
+### Building the Project
 
-The database schema is automatically created and populated with sample data on the first run. The schema is defined in `src/main/resources/database/schema.sql`, and the sample data is in `src/main/resources/database/sample_data.sql`.
+Use Maven to build the project. This will download all the necessary dependencies and compile the source code.
 
-## 🤝 Contributing
+```bash
+mvn clean install
+```
 
-Contributions are welcome! Please fork the repository and submit a pull request with your changes.
+This command will generate a JAR file in the `target` directory named `payroll-system-3.1.0.jar`.
 
-## 📄 License
+### Running the Application
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+Once the project is built, you can run the application using the following command:
+
+```bash
+java -jar target/payroll-system-3.1.0.jar
+```
+
+The application will start, and the database will be automatically initialized with a default schema and sample data.
+
+### Default Login Credentials
+
+The application comes with two default users:
+
+*   **Username:** `admin`
+*   **Password:** `admin123`
+
+*   **Username:** `hr`
+*   **Password:** `hr123`
+
+Upon the first successful login with these credentials, the passwords will be automatically hashed and updated in the database for enhanced security.

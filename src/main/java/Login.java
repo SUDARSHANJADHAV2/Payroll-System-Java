@@ -1,3 +1,5 @@
+import org.mindrot.jbcrypt.BCrypt;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -96,22 +98,56 @@ public class Login extends JFrame {
         }
 
         try (Connection conn = Conn.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT role FROM login WHERE username = ? AND password = ?")) {
+             PreparedStatement ps = conn.prepareStatement("SELECT password, role FROM login WHERE username = ?")) {
             ps.setString(1, username);
-            ps.setString(2, password);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
+                    String storedPassword = rs.getString("password");
                     String role = rs.getString("role");
-                    UserSession.setCurrentUser(username, role);
-                    dispose();
-                    SwingUtilities.invokeLater(() -> new Project().setVisible(true));
+
+                    if (BCrypt.checkpw(password, storedPassword)) {
+                        loginSuccess(username, role);
+                    } else {
+                        // This is for backward compatibility with plain text passwords.
+                        // On first successful login, the password will be hashed and updated.
+                        if (password.equals(storedPassword)) {
+                            updatePassword(username, password);
+                            loginSuccess(username, role);
+                        } else {
+                            loginFailure();
+                        }
+                    }
                 } else {
-                    JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+                    loginFailure();
                 }
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void loginSuccess(String username, String role) {
+        UserSession.setCurrentUser(username, role);
+        dispose();
+        SwingUtilities.invokeLater(() -> new Project().setVisible(true));
+    }
+
+    private void loginFailure() {
+        JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void updatePassword(String username, String plainTextPassword) {
+        String hashedPassword = BCrypt.hashpw(plainTextPassword, BCrypt.gensalt());
+        try (Connection conn = Conn.getConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE login SET password = ? WHERE username = ?")) {
+            ps.setString(1, hashedPassword);
+            ps.setString(2, username);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            // Log this error, but don't show it to the user
+            System.err.println("Could not update password to hashed format for user: " + username);
+            ex.printStackTrace();
         }
     }
 

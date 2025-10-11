@@ -1,3 +1,5 @@
+import org.mindrot.jbcrypt.BCrypt;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -8,11 +10,12 @@ import java.util.Random;
 
 public class NewEmployee extends JFrame {
     private final JTextField nameField, addressField, stateField, cityField, emailField, phoneField;
+    private final JPasswordField passwordField;
     private final JComboBox<String> genderComboBox;
 
     public NewEmployee() {
         super("Add New Employee");
-        setSize(400, 500);
+        setSize(400, 550);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -71,6 +74,13 @@ public class NewEmployee extends JFrame {
         gbc.gridx = 1;
         panel.add(phoneField, gbc);
 
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Password:"), gbc);
+        passwordField = new JPasswordField(20);
+        gbc.gridx = 1;
+        panel.add(passwordField, gbc);
+
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton submitButton = new JButton("Submit");
         JButton cancelButton = new JButton("Cancel");
@@ -97,25 +107,49 @@ public class NewEmployee extends JFrame {
         String city = cityField.getText();
         String email = emailField.getText();
         String phone = phoneField.getText();
+        String password = new String(passwordField.getPassword());
         String empId = generateEmployeeId();
 
-        String sql = "INSERT INTO employee(emp_id, name, gender, address, state, city, email, phone) VALUES(?,?,?,?,?,?,?,?)";
+        if (password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Password cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        try (Connection conn = Conn.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, empId);
-            ps.setString(2, name);
-            ps.setString(3, gender);
-            ps.setString(4, address);
-            ps.setString(5, state);
-            ps.setString(6, city);
-            ps.setString(7, email);
-            ps.setString(8, phone);
-            ps.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Employee added successfully. Employee ID: " + empId);
-            dispose();
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+        String employeeSql = "INSERT INTO employee(emp_id, name, gender, address, state, city, email, phone) VALUES(?,?,?,?,?,?,?,?)";
+        String loginSql = "INSERT INTO login(username, password, role) VALUES(?,?,?)";
+
+        try (Connection conn = Conn.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement empPs = conn.prepareStatement(employeeSql);
+                 PreparedStatement loginPs = conn.prepareStatement(loginSql)) {
+
+                empPs.setString(1, empId);
+                empPs.setString(2, name);
+                empPs.setString(3, gender);
+                empPs.setString(4, address);
+                empPs.setString(5, state);
+                empPs.setString(6, city);
+                empPs.setString(7, email);
+                empPs.setString(8, phone);
+                empPs.executeUpdate();
+
+                loginPs.setString(1, empId);
+                loginPs.setString(2, hashedPassword);
+                loginPs.setString(3, "employee"); // Default role
+                loginPs.executeUpdate();
+
+                conn.commit();
+                JOptionPane.showMessageDialog(this, "Employee added successfully. Employee ID: " + empId);
+                dispose();
+            } catch (SQLException ex) {
+                conn.rollback();
+                JOptionPane.showMessageDialog(this, "Error adding employee: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error adding employee: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Database connection error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
