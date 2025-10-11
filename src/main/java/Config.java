@@ -21,11 +21,14 @@ public class Config {
     }
 
     private void loadProperties() {
-        try (InputStream input = new FileInputStream(CONFIG_FILE)) {
+        try (InputStream input = Config.class.getClassLoader().getResourceAsStream(CONFIG_FILE)) {
+            if (input == null) {
+                System.err.println("Error: Configuration file not found in classpath: " + CONFIG_FILE);
+                throw new RuntimeException("Configuration file not found");
+            }
             properties.load(input);
         } catch (IOException e) {
-            System.err.println("Error: Configuration file not found or cannot be read: " + CONFIG_FILE);
-            System.err.println("Please ensure the file exists and has the correct permissions.");
+            System.err.println("Error reading configuration file: " + CONFIG_FILE);
             throw new RuntimeException("Failed to load configuration", e);
         }
     }

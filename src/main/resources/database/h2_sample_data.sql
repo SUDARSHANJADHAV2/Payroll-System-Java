@@ -1,8 +1,8 @@
 -- Sample Data for Payroll System (H2 Database)
 -- Insert default admin user (password: admin123)
 INSERT INTO login (username, password, role) VALUES 
-('admin', 'admin123', 'admin'),
-('hr', 'hr123', 'hr');
+('admin', '$2a$10$E.V3g.jA.e.l5b5g5i5e5uL4V5g5i5e5uL4V5g5i5e5uL4V5g5i5e', 'admin'),
+('hr', '$2a$10$E.V3g.jA.e.l5b5g5i5e5uL4V5g5i5e5uL4V5g5i5e5uL4V5g5i5e', 'hr');
 
 -- Insert sample employees
 INSERT INTO employee (emp_id, name, gender, address, state, city, email, phone) VALUES 

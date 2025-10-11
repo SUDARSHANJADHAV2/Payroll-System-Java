@@ -14,14 +14,14 @@ public class DatabaseInitializer {
         try (Connection connection = Conn.getConnection()) {
             if (!tableExists(connection, "employee")) {
                 System.out.println("Initializing database schema...");
-                executeSqlScript(connection, "database/schema.sql");
+                executeSqlScript(connection, "database/h2_schema.sql");
                 System.out.println("Database schema initialized successfully!");
             } else {
                 System.out.println("Database already initialized.");
             }
             if (isTableEmpty(connection, "login")) {
                 System.out.println("Inserting sample data...");
-                executeSqlScript(connection, "database/sample_data.sql");
+                executeSqlScript(connection, "database/h2_sample_data.sql");
                 System.out.println("Sample data inserted successfully!");
             }
         } catch (SQLException e) {

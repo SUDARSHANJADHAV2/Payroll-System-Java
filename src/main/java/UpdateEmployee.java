@@ -170,15 +170,27 @@ public class UpdateEmployee extends JFrame {
         String empId = (String) empIdComboBox.getSelectedItem();
         int choice = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete employee " + empId + "?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
         if (choice == JOptionPane.YES_OPTION) {
-            String sql = "DELETE FROM employee WHERE emp_id = ?";
-            try (Connection conn = Conn.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, empId);
-                ps.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Employee deleted successfully.");
-                dispose();
+            String deleteEmployeeSql = "DELETE FROM employee WHERE emp_id = ?";
+            String deleteLoginSql = "DELETE FROM login WHERE username = ?";
+            try (Connection conn = Conn.getConnection()) {
+                conn.setAutoCommit(false);
+                try (PreparedStatement empPs = conn.prepareStatement(deleteEmployeeSql);
+                     PreparedStatement loginPs = conn.prepareStatement(deleteLoginSql)) {
+                    empPs.setString(1, empId);
+                    empPs.executeUpdate();
+
+                    loginPs.setString(1, empId);
+                    loginPs.executeUpdate();
+
+                    conn.commit();
+                    JOptionPane.showMessageDialog(this, "Employee deleted successfully.");
+                    dispose();
+                } catch (SQLException ex) {
+                    conn.rollback();
+                    JOptionPane.showMessageDialog(this, "Error deleting employee: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error deleting employee: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Database connection error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
