@@ -18,21 +18,28 @@ public class ListAttendance extends JFrame implements ActionListener {
         setLocation(450, 150);
 
         try {
-            String q = "select * from attendance";
+            String q = "select emp_id, date, first_half, second_half from attendance";
             Conn c1 = new Conn();
             ResultSet rs = c1.s.executeQuery(q);
             while (rs.next()) {
-                d[i][j++] = rs.getString("id");
-                d[i][j++] = rs.getString("date_tm");
-                d[i][j++] = rs.getString("f_half");
-                d[i][j++] = rs.getString("s_half");
+                d[i][j++] = rs.getString("emp_id");
+                d[i][j++] = rs.getString("date");
+                d[i][j++] = rs.getString("first_half");
+                d[i][j++] = rs.getString("second_half");
                 i++;
                 j = 0;
             }
+            rs.close();
+            c1.close();
 
+            // Create table with actual data
             j1 = new JTable(d, h);
 
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error loading attendance data: " + e.getMessage(), 
+                "Database Error", JOptionPane.ERROR_MESSAGE);
+            // Create empty table if there's an error
+            j1 = new JTable(new String[0][4], h);
         }
 
         b1 = new JButton("Print");

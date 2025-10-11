@@ -24,7 +24,7 @@ public class ListEmployee extends JFrame implements ActionListener {
             ResultSet rs = c1.s.executeQuery(q);
             while (rs.next()) {
                 // i = 0 j = 0
-                d[i][j++] = rs.getString("id");
+                d[i][j++] = rs.getString("emp_id");
                 d[i][j++] = rs.getString("name");
                 d[i][j++] = rs.getString("gender");
                 d[i][j++] = rs.getString("address");
@@ -35,9 +35,17 @@ public class ListEmployee extends JFrame implements ActionListener {
                 i++;
                 j = 0;
             }
+            rs.close();
+            c1.close();
+            
+            // Create table with actual data
             j1 = new JTable(d, h);
 
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error loading employee data: " + e.getMessage(), 
+                "Database Error", JOptionPane.ERROR_MESSAGE);
+            // Create empty table if there's an error
+            j1 = new JTable(new String[0][8], h);
         }
 
         b1 = new JButton("Print");

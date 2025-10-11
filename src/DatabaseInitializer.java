@@ -54,7 +54,7 @@ public class DatabaseInitializer {
         String[] createStatements = {
             // Create login table
             "CREATE TABLE IF NOT EXISTS login (" +
-            "id INT PRIMARY KEY AUTO_INCREMENT, " +
+            "id INT PRIMARY KEY IDENTITY, " +
             "username VARCHAR(50) NOT NULL UNIQUE, " +
             "password VARCHAR(255) NOT NULL, " +
             "role VARCHAR(20) DEFAULT 'admin', " +
@@ -89,7 +89,7 @@ public class DatabaseInitializer {
             
             // Create attendance table
             "CREATE TABLE IF NOT EXISTS attendance (" +
-            "id INT PRIMARY KEY AUTO_INCREMENT, " +
+            "id INT PRIMARY KEY IDENTITY, " +
             "emp_id VARCHAR(10) NOT NULL, " +
             "date DATE NOT NULL, " +
             "first_half VARCHAR(10) DEFAULT 'Present', " +
@@ -100,7 +100,7 @@ public class DatabaseInitializer {
             
             // Create payslip table
             "CREATE TABLE IF NOT EXISTS payslip (" +
-            "id INT PRIMARY KEY AUTO_INCREMENT, " +
+            "id INT PRIMARY KEY IDENTITY, " +
             "emp_id VARCHAR(10) NOT NULL, " +
             "month VARCHAR(20) NOT NULL, " +
             "year INT NOT NULL, " +

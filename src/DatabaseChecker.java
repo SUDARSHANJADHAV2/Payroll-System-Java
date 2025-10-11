@@ -87,18 +87,15 @@ public class DatabaseChecker {
     }
     
     private static void createLoginTable(Connection conn) throws SQLException {
-        String createTable = "CREATE TABLE IF NOT EXISTS login (" +
-            "id INT PRIMARY KEY AUTO_INCREMENT, " +
-            "username VARCHAR(50) NOT NULL UNIQUE, " +
-            "password VARCHAR(255) NOT NULL, " +
-            "role VARCHAR(20) DEFAULT 'admin', " +
-            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-            "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
+        String createLoginTable = "CREATE TABLE IF NOT EXISTS login (" +
+                "id INT PRIMARY KEY IDENTITY, " +
+                "username VARCHAR(50) NOT NULL UNIQUE, " +
+                "password VARCHAR(255) NOT NULL, " +
+                "role VARCHAR(20) DEFAULT 'admin', " +
+                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
         
-        Statement stmt = conn.createStatement();
-        stmt.execute(createTable);
-        stmt.close();
-        System.out.println("Login table created successfully");
+        conn.createStatement().execute(createLoginTable);
     }
     
     private static void insertDefaultUsers(Connection conn) throws SQLException {

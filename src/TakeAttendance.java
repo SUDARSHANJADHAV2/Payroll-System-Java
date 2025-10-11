@@ -17,10 +17,12 @@ public class TakeAttendance extends JFrame implements ActionListener {
             Conn connection = new Conn();
             ResultSet rs = connection.s.executeQuery("select * from employee");
             while (rs.next()) {
-                choice1.add(rs.getString("id"));
+                choice1.add(rs.getString("emp_id"));
             }
 
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error loading employees: " + e.getMessage(), 
+                "Database Error", JOptionPane.ERROR_MESSAGE);
         }
 
         add(new JLabel("Select Empno"));
@@ -67,21 +69,68 @@ public class TakeAttendance extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == button1) {
+            markAttendance();
+        } else if (ae.getSource() == button2) {
+            this.dispose();
+        }
+    }
 
+    private void markAttendance() {
         String selectItem1 = choice2.getSelectedItem();
         String selectedItem2 = choice3.getSelectedItem();
-        String dateToString = new java.util.Date().toString();
-        String id = choice1.getSelectedItem();
-        String qry = "Insert Into Attendance Values(" + id + ",'" + dateToString + "','" + selectItem1 + "','"
-                + selectedItem2 + "')";
+        String empId = choice1.getSelectedItem();
+        
+        // Input validation
+        if (empId == null || empId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select an employee.", 
+                "Input Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
+        Conn connection = null;
+        PreparedStatement pstmt = null;
+        
         try {
-            Conn connection = new Conn();
-            connection.s.executeUpdate(qry);
-            JOptionPane.showMessageDialog(null, "Attendence confirmed");
-            this.setVisible(false);
+            connection = new Conn();
+            
+            // Use PreparedStatement to prevent SQL injection
+            String qry = "INSERT INTO attendance (emp_id, date, first_half, second_half) VALUES (?, CURRENT_DATE, ?, ?)";
+            pstmt = connection.prepareStatement(qry);
+            pstmt.setString(1, empId);
+            pstmt.setString(2, selectItem1);
+            pstmt.setString(3, selectedItem2);
+            
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(this, "Attendance confirmed successfully!", 
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to mark attendance. Please try again.", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 23505) { // Unique constraint violation
+                JOptionPane.showMessageDialog(this, "Attendance already marked for this employee today.", 
+                    "Duplicate Entry", JOptionPane.WARNING_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(), 
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+            System.err.println("Error marking attendance: " + e.getMessage());
         } catch (Exception ee) {
+            JOptionPane.showMessageDialog(this, "Unexpected error: " + ee.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
             ee.printStackTrace();
+        } finally {
+            // Clean up resources
+            try {
+                if (pstmt != null) pstmt.close();
+                if (connection != null) connection.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing database resources: " + e.getMessage());
+            }
         }
     }
 

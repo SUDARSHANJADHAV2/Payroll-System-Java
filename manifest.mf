@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Main-Class: Splash
-Class-Path: lib/mysql-connector-java-8.0.33.jar
+Class-Path: lib/h2-2.1.214.jar
 Created-By: Payroll Management System v3.1
 Implementation-Title: Payroll Management System
 Implementation-Version: 3.1

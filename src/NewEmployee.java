@@ -237,7 +237,12 @@ public class NewEmployee extends JFrame implements ActionListener {
      * Generate unique employee ID
      */
     private String generateEmployeeId() {
-        return "EMP" + String.format("%04d", new Random().nextInt(9999) + 1);
+        try {
+            return DatabaseUtils.getNextEmployeeId();
+        } catch (Exception e) {
+            // Fallback to random generation if database is not available
+            return "EMP" + String.format("%04d", new Random().nextInt(9999) + 1);
+        }
     }
 
     /**

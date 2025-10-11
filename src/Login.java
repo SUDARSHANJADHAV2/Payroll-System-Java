@@ -82,6 +82,9 @@ public class Login extends JFrame implements ActionListener {
         try {
             conn = new Conn();
 
+            // Check if login table exists, create if not
+            DatabaseChecker.checkDatabase();
+            
             // Use PreparedStatement to prevent SQL injection
             String query = "SELECT username, role FROM login WHERE username = ? AND password = ?";
             pstmt = conn.prepareStatement(query);

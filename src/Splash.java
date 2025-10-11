@@ -39,9 +39,14 @@ class sframe extends JFrame implements Runnable {
         try {
             Thread.sleep(7000);
             this.setVisible(false);
+            
+            // Initialize database before showing login
+            DatabaseInitializer.initializeDatabase();
+            
             Login login = new Login();
 
         } catch (Exception e) {
+            System.err.println("Error during startup: " + e.getMessage());
             e.printStackTrace();
         }
     }
